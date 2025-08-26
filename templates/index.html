@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PDF Search</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f7f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2a7ae2;
+            margin-bottom: 10px;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 600px;
+        }
+        input[type="file"] {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: calc(100% - 22px);
+            font-size: 1rem;
+            border: 1px solid #ccd0d5;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        label {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 15px;
+            user-select: none;
+        }
+        label input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+        }
+        button {
+            background-color: #2a7ae2;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #1a5ec8;
+        }
+        #uploadMessage {
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        #uploadMessage.success {
+            color: #28a745;
+        }
+        #uploadMessage.error {
+            color: #d93025;
+        }
+        @media (max-width: 640px) {
+            form {
+                padding: 15px;
+                width: 100%;
+            }
+        }
+        /* Upload progress modal */
+        #uploadModal {
+            display: none;
+            position: fixed;
+            top:0; left:0; right:0; bottom:0;
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Upload PDFs</h1>
+<form id="uploadForm" enctype="multipart/form-data" novalidate>
+    <input type="file" id="pdfFiles" name="pdf_files" multiple required accept="application/pdf" />
+    <button type="submit">Upload PDF</button>
+</form>
+
+<div id="uploadMessage"></div>
+
+<h1>Search PDFs</h1>
+<p style="font-size: 0.9rem; color: #666; max-width: 600px; margin-top: -10px; margin-bottom: 15px;">
+    <em>Note: The search is performed on all PDFs you have uploaded.</em>
+</p>
+<form action="/search-content" method="post" novalidate>
+    <input type="text" name="query" placeholder="Enter search text" required autocomplete="off" />
+    <label><input type="checkbox" name="exact_match" /> Exact Phrase Match</label>
+    <button type="submit">Search</button>
+</form>
+
+<!-- Upload In Progress Modal -->
+<div id="uploadModal">
+    Upload in progress. Please wait...
+</div>
+
+<script>
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();  // Prevent default form submission
+
+    const modal = document.getElementById('uploadModal');
+    const files = document.getElementById('pdfFiles').files;
+    const messageEl = document.getElementById('uploadMessage');
+    
+    messageEl.textContent = '';
+    messageEl.className = '';
+
+    if (files.length === 0) {
+        alert('Please select at least one PDF.');
+        return;
+    }
+
+    modal.style.display = 'flex';
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+        formData.append('pdf_files', files[i]);
+    }
+
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('Upload failed');
+        }
+
+        const result = await response.json();
+        messageEl.textContent = `✅ Upload completed: ${result.message}`;
+        messageEl.className = 'success';
+
+        document.getElementById('uploadForm').reset();
+    } catch (error) {
+        messageEl.textContent = '❌ Error uploading PDFs.';
+        messageEl.className = 'error';
+    } finally {
+        modal.style.display = 'none';
+    }
+});
+</script>
+
+</body>
+</html>

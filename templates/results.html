@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Results</title>
+</head>
+<body>
+<h1>Search Results for '{{ query }}'</h1>
+<p>Exact Match: {{ exact_match }}</p>
+<a href="/">Back</a>
+<ul>
+    {% for item in results %}
+    <li>
+        <strong>ID:</strong> {{ item.doc_id }}<br>
+        <strong>Type:</strong> {{ item.type }}<br>
+        <strong>Page:</strong> {{ item.page }}<br>
+        <strong>Content Snippet:</strong> {{ item.content }}<br>
+    </li>
+    {% else %}
+    <li>No results found.</li>
+    {% endfor %}
+</ul>
+</body>
+</html>
